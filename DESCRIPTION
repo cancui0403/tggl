@@ -1,0 +1,20 @@
+Package: tggl
+Type: Package
+Title: Tree-Guided Group Lasso for Multi-Task Regression
+Version: 0.1.0
+Author: Can Cui
+Maintainer: Can Cui <your.email@example.com>
+Description: Efficient implementation of Tree-Guided Group Lasso using Block Coordinate Descent.
+    Supports complex hierarchical structures and covariance-aware loss functions.
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    Rcpp (>= 1.0.0),
+    methods
+LinkingTo: 
+    Rcpp, 
+    RcppArmadillo
+RoxygenNote: 7.3.3
+Suggests: 
+    testthat
