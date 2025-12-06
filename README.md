@@ -209,7 +209,7 @@ This formulation transforms the original non-smooth problem into a smooth ridge-
 We optimize the coefficient matrix $B$ using Block Coordinate Descent. The algorithm updates the coefficients row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm.
 
 #### B. The Tree-Structured Proximal Operator
-This is the core engine of `tggl`. We utilize an efficient **Dual-Path Algorithm** (Jenatton et al., 2011) to compute the exact proximal map.
+This is the core engine of `tggl`. We utilize an efficient proximal algorithm for hierarchical/overlapping groups (Jenatton et al., 2011) to compute the exact proximal map.
 
 * **Mechanism**: The algorithm exploits the hierarchical structure of the groups. It computes the exact projection by traversing the tree in a topological order (typically **post-order**, from leaves to the root).
 * **Sequential Shrinkage**: At each node $v$, a generalized soft-thresholding operation is applied to the associated vector of coefficients. The threshold is determined by the node's weight $w_v$ and the regularization parameter $\lambda$.
