@@ -203,7 +203,7 @@ We optimize the coefficient matrix $B$ using Block Coordinate Descent. The algor
 #### B. The Tree-Structured Proximal Operator
 This is the core engine of `tggl`. We utilize an efficient proximal algorithm for hierarchical/overlapping groups (Jenatton et al., 2011) to compute the exact proximal map.
 
-* **Mechanism**: The algorithm exploits the hierarchical structure of the groups. It computes the exact projection by traversing the tree in a topological order (typically **post-order**, from leaves to the root).
+* **Mechanism**: The algorithm exploits the hierarchical structure of the groups. It computes the exact proximal operator by traversing the tree in a topological order (typically **post-order**, from leaves to the root).
 * **Sequential Shrinkage**: At each node $v$, a generalized soft-thresholding operation is applied to the associated vector of coefficients. The threshold is determined by the node's weight $w_v$ and the regularization parameter $\lambda$.
 * **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the group norm falls below the threshold $\lambda w_v$ at any stage of the traversal, the entire group of coefficients is zeroed out, strictly enforcing the hierarchical sparsity constraint.
 
