@@ -3,6 +3,8 @@
 
 # tggl: Tree-Guided Group Lasso
 
+**Status: under active development**
+
 **Efficient implementation of Tree-Guided Group Lasso using Block Coordinate Descent.**
 
 `tggl` is an R package designed for high-dimensional multi-task regression problems where the features (e.g., SNPs) and tasks (e.g., tissues/cell types) follow a hierarchical tree structure. It enforces structural sparsity, allowing for the selection of variables that are shared across groups of tasks or specific to individual tasks.
@@ -10,7 +12,7 @@
 ## Key Features
 
   * **High Performance**: Implemented in C++ via `Rcpp` and `RcppArmadillo`.
-  * **Scalable Algorithm**: Uses **Block Coordinate Descent (BCD)** with **Active Set** strategies and **Strong Rules**, achieving linear complexity relative to the number of features ($O(p)$).
+  * **Scalable Algorithm**: Uses **Block Coordinate Descent (BCD)** with **Active Set** strategies and **Strong Rules**, achieving approximately linear scaling in the number of active features in the high-dimensional regime.
   * **Flexible Tree Structure**: Supports arbitrary hierarchical structures (Root $\to$ Intermediate Groups $\to$ Leaves).
   * **Smart Tuning**: Implements a **"Coarse-to-Fine"** grid search strategy for Cross-Validation (CV) to find the optimal penalty parameter fast and accurately.
   * **Visualization**: Built-in support for visualizing coefficient patterns (heatmaps).
