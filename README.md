@@ -190,7 +190,7 @@ This transforms the original non-smooth problem into a smooth **Ridge Regression
 * **Limitation 1: No True Sparsity (Approximate Zeros)**
     To ensure numerical stability (avoiding division by zero when $\|B\| \to 0$), a smoothing parameter $\epsilon$ must be introduced. Consequently, coefficients approach zero asymptotically but **never reach exactly zero**. This requires arbitrary post-hoc thresholding to select variables.
 * **Limitation 2: High Complexity**
-    The variational update typically requires inverting a large matrix ($p \times p$ or $q \times q$) in every iteration. The complexity is roughly $O(p^3)$ or $O(n^3)$, which scales poorly for high-dimensional genomic data ($p > 10,000$).
+    The variational update typically requires inverting large matrices in every iteration. The computational complexity is: $$O(q^2n + q^2\log q + np^2 + l(p^3 + qp^2 + pq))$$ In high-dimensional genomic settings (e.g., TWAS/eQTL), the number of features $p$ (SNPs) is the dominant factor, often exceeding $10^5$. The **$O(p^3)$** term makes this approach computationally infeasible for genome-wide data.
 
 ---
 
@@ -209,7 +209,7 @@ This is the core engine of `tggl`. We utilize the efficient **Dual-Path Algorith
 * **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the norm of a group falls below the threshold at any stage of the traversal, the entire group is zeroed out, strictly enforcing the hierarchical sparsity constraint.
 
 #### Complexity Analysis
-The tree proximal operator is highly efficient, computing the exact projection in **$O(q)$** time (linear with respect to the number of tasks). When combined with BCD and active set strategies, the overall complexity per epoch is **$O(p \cdot q)$**, making `tggl` highly scalable to high-dimensional datasets ($p > 10^5$).
+Our approach avoids matrix inversion entirely. The computational complexity is $$O(l(npq + pq^2))$$, where $l$ is the number of iterations. In high-dimensional settings where **$p \gg n, q$**, the complexity is effectively **linear in $p$** ($O(p)$). This drastic reduction from cubic $O(p^3)$ to linear $O(p)$ allows `tggl` to scale efficiently to hundreds of thousands of variants.
 
 ---
 
@@ -221,4 +221,8 @@ The tree proximal operator is highly efficient, computing the exact projection i
 This project is licensed under the MIT License.
 
 -----
+
+
+    
+
 
