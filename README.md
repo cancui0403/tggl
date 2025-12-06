@@ -13,7 +13,7 @@
 
   * **High Performance**: Implemented in C++ via `Rcpp` and `RcppArmadillo`.
   * **Scalable Algorithm**: Uses **Block Coordinate Descent (BCD)** with **Active Set** strategies and **Strong Rules**, achieving approximately linear scaling in the number of active features in the high-dimensional regime.
-  * **Flexible Tree Structure**: Supports arbitrary hierarchical structures (Root $\to$ Intermediate Groups $\to$ Leaves).
+  * **Flexible Tree Structure**: Supports tree-structured (nested) hierarchical structures (Root $\to$ Intermediate Groups $\to$ Leaves).
   * **Smart Tuning**: Implements a **"Coarse-to-Fine"** grid search strategy for Cross-Validation (CV) to find the optimal penalty parameter fast and accurately.
   * **Visualization**: Built-in support for visualizing coefficient patterns (heatmaps).
 
@@ -54,14 +54,12 @@ You can install the development version of `tggl` from GitHub:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("your_username/tggl")
+devtools::install_github("cancui0403/tggl")
 ```
-
-*(Note: Replace `your_username` with your actual GitHub username)*
 
 ## Quick Start
 
-Here is a complete example simulating a "Group-Dominant" signal structure and recovering it using `tggl`.
+Below is a minimal end-to-end example: simulate data, define a task tree, fit TGGL with CV, and visualize the estimated coefficients.
 
 ### 1\. Simulate Data
 
@@ -163,10 +161,6 @@ The `tree` argument is a `list` where each element represents a node in the hier
       * **Lower weight**: Weaker penalty, allows variables to be active in this group more easily.
 
 The package automatically handles the hierarchical order (leaves to root) internally.
-
-This is the final section of your README, focusing on the **Algorithms and Methodology**.
-
-It contrasts the original Variational Method (Kim & Xing) with your efficient BCD implementation, highlighting the "Exact Zeros" capability and "Linear Complexity" of `tggl`.
 
 ---
 
