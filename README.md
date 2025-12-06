@@ -3,7 +3,7 @@
 
 # tggl: Tree-Guided Group Lasso
 
-**Status: under active development**
+> **Status:** Under active development (API may change).
 
 **Efficient implementation of Tree-Guided Group Lasso using Block Coordinate Descent.**
 
