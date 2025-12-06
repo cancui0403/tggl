@@ -15,11 +15,6 @@
   * **Smart Tuning**: Implements a **"Coarse-to-Fine"** grid search strategy for Cross-Validation (CV) to find the optimal penalty parameter fast and accurately.
   * **Visualization**: Built-in support for visualizing coefficient patterns (heatmaps).
 
-To address your request, here is a detailed **Problem Formulation** section designed to be placed at the very beginning of your README, just after the main title and brief description but before "Key Features".
-
-This formulation clarifies the mathematical optimization problem `tggl` solves, defining the objective function and the tree-guided penalty term.
-
-***
 
 ## Problem Formulation
 
