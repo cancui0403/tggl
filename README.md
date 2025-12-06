@@ -15,6 +15,42 @@
   * **Smart Tuning**: Implements a **"Coarse-to-Fine"** grid search strategy for Cross-Validation (CV) to find the optimal penalty parameter fast and accurately.
   * **Visualization**: Built-in support for visualizing coefficient patterns (heatmaps).
 
+To address your request, here is a detailed **Problem Formulation** section designed to be placed at the very beginning of your README, just after the main title and brief description but before "Key Features".
+
+This formulation clarifies the mathematical optimization problem `tggl` solves, defining the objective function and the tree-guided penalty term.
+
+***
+
+## Problem Formulation
+
+Consider a multi-task regression problem with $n$ samples, $p$ features (predictors), and $q$ tasks (responses). Let $Y \in \mathbb{R}^{n \times q}$ be the response matrix, $X \in \mathbb{R}^{n \times p}$ be the design matrix, and $B \in \mathbb{R}^{p \times q}$ be the matrix of regression coefficients.
+
+The **Tree-Guided Group Lasso (TGGL)** estimates the coefficient matrix $B$ by minimizing the following convex objective function:
+
+$$
+\min_{B} \underbrace{\frac{1}{2} \|Y - XB\|_F^2}_{\text{Loss Function}} + \underbrace{\lambda \sum_{j=1}^p \Omega_{\text{tree}}(B_{j\cdot})}_{\text{Structured Penalty}}
+$$
+
+### The Tree-Guided Penalty
+
+The penalty term $\Omega_{\text{tree}}$ is defined based on a hierarchical tree $\mathcal{T}$ over the tasks. For a specific feature (row) $j$, the penalty is a weighted sum of $L_2$ norms over groups defined by the tree nodes:
+
+$$
+\Omega_{\text{tree}}(B_{j\cdot}) = \sum_{v \in \mathcal{V}} w_v \|B_{j, \mathcal{G}_v}\|_2
+$$
+
+Where:
+* $\| \cdot \|_F$ is the Frobenius norm (sum of squared errors).
+* $\mathcal{V}$ is the set of nodes in the hierarchy tree (including leaves, internal nodes, and root).
+* $\mathcal{G}_v$ is the set of tasks (column indices of $B$) associated with the subtree rooted at node $v$.
+* $w_v$ is the penalty weight associated with node $v$.
+* $\lambda$ is the global regularization parameter.
+
+### Hierarchical Sparsity
+
+This overlapping group structure imposes **hierarchical sparsity**. If the coefficient group for a parent node is shrunk to zero, the coefficients for all its descendant nodes are automatically forced to zero. This allows the model to select features that are effective at different granularities—for example, selecting a variant that affects all tasks (global signal) versus one that affects only a specific subgroup of tasks (local signal).
+
+
 ## Installation
 
 You can install the development version of `tggl` from GitHub:
@@ -131,13 +167,54 @@ The `tree` argument is a `list` where each element represents a node in the hier
 
 The package automatically handles the hierarchical order (leaves to root) internally.
 
-## Methodology
+This is the final section of your README, focusing on the **Algorithms and Methodology**.
 
-The solver transforms the Tree-Guided Group Lasso problem into a summation of group norms and solves it using **Block Coordinate Descent**.
+It contrasts the original Variational Method (Kim & Xing) with your efficient BCD implementation, highlighting the "Exact Zeros" capability and "Linear Complexity" of `tggl`.
 
-  * **Variable Update**: Each row of coefficients $B_{j \cdot}$ is updated analytically via a proximal operator for tree-structured norms.
-  * **Active Set**: The algorithm iterates only over the non-zero (active) set of variables for efficiency.
-  * **Strong Rules**: Safe screening rules are applied to discard predictors that are likely to be zero before fitting.
+***
+
+## Algorithms and Methodology
+
+`tggl` implements a direct optimization strategy that differs significantly from the variational approximations often used in early literature. Below, we compare the two approaches to highlight the advantages of our implementation.
+
+### 1. The Variational Approach (Kim & Xing, 2010)
+
+The seminal work by Kim & Xing (2010, 2012) addresses the non-smooth nature of the $L_1/L_2$ penalty by using a **Variational Upper Bound**. They approximate the penalty term as a re-weighted $L_2$ norm:
+
+$$
+\left(\sum_{v \in \mathcal{V}} w_v \|B_{\mathcal{G}_v}\|_2\right)^2 \le \sum_{v \in \mathcal{V}} \frac{w_v^2 \|B_{\mathcal{G}_v}\|_2^2}{\gamma_v}
+$$
+
+This transforms the original non-smooth problem into a smooth **Ridge Regression (Re-weighted Least Squares)** problem, which is solved iteratively.
+
+* **Limitation 1: No True Sparsity (Approximate Zeros)**
+    To ensure numerical stability (avoiding division by zero when $\|B\| \to 0$), a smoothing parameter $\epsilon$ must be introduced. Consequently, coefficients approach zero asymptotically but **never reach exactly zero**. This requires arbitrary post-hoc thresholding to select variables.
+* **Limitation 2: High Complexity**
+    The variational update typically requires inverting a large matrix ($p \times p$ or $q \times q$) in every iteration. The complexity is roughly $O(p^3)$ or $O(n^3)$, which scales poorly for high-dimensional genomic data ($p > 10,000$).
+
+---
+
+### 2. Our Approach: BCD + Tree Proximal Operator
+
+`tggl` solves the **original non-smooth** convex optimization problem directly, without approximation.
+
+#### A. Block Coordinate Descent (BCD)
+We optimize the coefficient matrix $B$ row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm.
+
+#### B. The Tree-Structured Proximal Operator
+This is the core engine of `tggl`. We utilize the efficient **Dual-Path Algorithm** (Jenatton et al., 2011) to compute the exact proximal map.
+
+* **Mechanism**: The algorithm exploits the hierarchical nesting of groups. It computes the projection by traversing the tree in a specific topological order (typically from leaves to roots).
+* **Sequential Shrinkage**: At each node $v$, a generalized soft-thresholding operation is applied to the associated vector of coefficients. The threshold is determined by the node's weight $w_v$ and the regularization parameter $\lambda$.
+* **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the norm of a group falls below the threshold at any stage of the traversal, the entire group is zeroed out, strictly enforcing the hierarchical sparsity constraint.
+
+#### Complexity Analysis
+The tree proximal operator is highly efficient, computing the exact projection in **$O(q)$** time (linear with respect to the number of tasks). When combined with BCD and active set strategies, the overall complexity per epoch is **$O(p \cdot q)$**, making `tggl` highly scalable to high-dimensional datasets ($p > 10^5$).
+
+---
+
+
+**Conclusion**: By combining Block Coordinate Descent with an active set strategy and the analytical tree proximal operator, `tggl` achieves high computational efficiency while guaranteeing the theoretical properties of the Tree-Guided Group Lasso.
 
 ## License
 
