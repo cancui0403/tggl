@@ -168,18 +168,18 @@ The package automatically handles the hierarchical order (leaves to root) intern
 
 `tggl` implements a direct optimization strategy that differs significantly from the variational approximations often used in early literature. Below, we compare the two approaches to highlight the advantages of our implementation.
 
-### 1. The Traditional Variational Approach 
+### 1. The Variational Approach
 
 The variational framework addresses the non-smooth nature of the tree-guided penalty by using a **Variational Upper Bound**. The squared penalty term is approximated using auxiliary variables $d_{j,v}$:
 
 $$
-\left(\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|\beta_{\mathcal{G}_v}^j\|_2\right)^2 \le \sum_{j=1}^p \sum_{v \in \mathcal{V}} \frac{w_v^2 \|\beta_{\mathcal{G}_v}^j\|_2^2}{d_{j,v}}
+\left(\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|B_{j, \mathcal{G}_v}\|_2\right)^2 \le \sum_{j=1}^p \sum_{v \in \mathcal{V}} \frac{w_v^2 \|B_{j, \mathcal{G}_v}\|_2^2}{d_{j,v}}
 $$
 
 subject to $\sum_{j,v} d_{j,v} = 1$ and $d_{j,v} \ge 0$. **Equality holds when:**
 
 $$
-d_{j,v} = \frac{w_v \|\beta_{\mathcal{G}_v}^j\|_2}{\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|\beta_{\mathcal{G}_v}^j\|_2}
+d_{j,v} = \frac{w_v \|B_{j, \mathcal{G}_v}\|_2}{\sum_{k=1}^p \sum_{u \in \mathcal{V}} w_u \|B_{k, \mathcal{G}_u}\|_2}
 $$
 
 This formulation transforms the original non-smooth problem into a smooth ridge-type problem, which is typically solved via alternating updates.
@@ -188,7 +188,8 @@ This formulation transforms the original non-smooth problem into a smooth ridge-
     The variational reformulation leads to a weighted $L_2$ (ridge-type) subproblem, which typically produces dense coefficients. Exact zeros usually require explicit post-hoc thresholding or an exact non-smooth solver, as the smooth approximation asymptotically approaches zero but rarely reaches it.
 
 * **Limitation 2: High Per-Iteration Cost**
-    In the alternating updates, the coefficient update step involves $\beta^k = (X^\top X + \lambda D)^{-1}X^\top y_k$. Each iteration requires solving a $p \times p$ linear system; a dense factorization has **$O(p^3)$** time (naively) and becomes prohibitive when $p$ is large.
+    In the alternating updates, the coefficient update step for the $k$-th task involves $B_{\cdot k} = (X^\top X + \lambda D)^{-1}X^\top Y_{\cdot k}$. Each iteration requires solving a $p \times p$ linear system; a dense factorization has **$O(p^3)$** time (naively) and becomes prohibitive when $p$ is large (e.g., $p > 10^5$).
+   
 
 ---
 
@@ -219,6 +220,4 @@ Per epoch, the BCD algorithm with residual updates costs $O(\text{nnz}(X) \cdot 
 This project is licensed under the MIT License.
 
 -----
-
-
 
