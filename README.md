@@ -177,21 +177,27 @@ It contrasts the original Variational Method (Kim & Xing) with your efficient BC
 
 `tggl` implements a direct optimization strategy that differs significantly from the variational approximations often used in early literature. Below, we compare the two approaches to highlight the advantages of our implementation.
 
-### 1. The Variational Approach (Kim & Xing, 2010)
+### 1. The Traditional Variational Approach 
 
-The seminal work by Kim & Xing (2010, 2012) addresses the non-smooth nature of the tree-guided penalty by using a **Variational Upper Bound**. They approximate the squared penalty term using auxiliary variables $d_{j,v}$:
+The variational framework addresses the non-smooth nature of the tree-guided penalty by using a **Variational Upper Bound**. The squared penalty term is approximated using auxiliary variables $d_{j,v}$:
 
 $$
 \left(\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|\beta_{\mathcal{G}_v}^j\|_2\right)^2 \le \sum_{j=1}^p \sum_{v \in \mathcal{V}} \frac{w_v^2 \|\beta_{\mathcal{G}_v}^j\|_2^2}{d_{j,v}}
 $$
 
-subject to $\sum_{j,v} d_{j,v} = 1$ and $d_{j,v} \ge 0$. This formulation transforms the original non-smooth problem into a smooth **Ridge Regression (Re-weighted Least Squares)** problem, which is solved iteratively.
+subject to $\sum_{j,v} d_{j,v} = 1$ and $d_{j,v} \ge 0$. **Equality holds when:**
+
+$$
+d_{j,v} = \frac{w_v \|\beta_{\mathcal{G}_v}^j\|_2}{\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|\beta_{\mathcal{G}_v}^j\|_2}
+$$
+
+This formulation transforms the original non-smooth problem into a smooth ridge-type problem, which is typically solved via alternating updates.
 
 * **Limitation 1: No Exact Sparsity**
-    The variational reformulation leads to a weighted $L_2$ (ridge-type) subproblem, which typically produces dense coefficients. Achieving exact zeros usually requires ad-hoc post-hoc thresholding or an exact non-smooth solver, as the smooth approximation asymptotically approaches zero but rarely reaches it.
+    The variational reformulation leads to a weighted $L_2$ (ridge-type) subproblem, which typically produces dense coefficients. Exact zeros usually require explicit post-hoc thresholding or an exact non-smooth solver, as the smooth approximation asymptotically approaches zero but rarely reaches it.
 
 * **Limitation 2: High Per-Iteration Cost**
-    Each iteration requires solving large linear systems involving $X^\top X + \lambda D$ (e.g., via Cholesky factorization). This operation can be prohibitively expensive in high-dimensional genomic settings where the number of features $p$ is very large (e.g., $p > 10^5$).
+    In the alternating updates, the coefficient update step involves $\beta^k = (X^\top X + \lambda D)^{-1}X^\top y_k$. Each iteration requires solving a $p \times p$ linear system; a dense factorization has **$O(p^3)$** time (naively) and becomes prohibitive when $p$ is large.
 
 ---
 
@@ -223,7 +229,5 @@ This project is licensed under the MIT License.
 
 -----
 
-
-    
 
 
