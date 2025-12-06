@@ -203,7 +203,7 @@ Per epoch, the BCD algorithm with residual updates costs $O(\text{nnz}(X) \cdot 
 
 ---
 
-**Conclusion**: By combining Block Coordinate Descent with an active set strategy and the tree-guided proximal operator, `tggl` achieves high computational efficiency while preserving the original TGGL objective and enabling exact zeros via the tree-structured proximal operator.
+**Conclusion**: By combining Block Coordinate Descent with an active set strategy and the tree-guided proximal operator, `tggl` achieves high computational efficiency while preserving the original TGGL objective and enabling exact zeros.
 
 ## License
 
