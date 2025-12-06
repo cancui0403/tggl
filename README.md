@@ -171,7 +171,7 @@ This is the final section of your README, focusing on the **Algorithms and Metho
 
 It contrasts the original Variational Method (Kim & Xing) with your efficient BCD implementation, highlighting the "Exact Zeros" capability and "Linear Complexity" of `tggl`.
 
-***
+---
 
 ## Algorithms and Methodology
 
@@ -179,37 +179,38 @@ It contrasts the original Variational Method (Kim & Xing) with your efficient BC
 
 ### 1. The Variational Approach (Kim & Xing, 2010)
 
-The seminal work by Kim & Xing (2010, 2012) addresses the non-smooth nature of the $L_1/L_2$ penalty by using a **Variational Upper Bound**. They approximate the penalty term as a re-weighted $L_2$ norm:
+The seminal work by Kim & Xing (2010, 2012) addresses the non-smooth nature of the tree-guided penalty by using a **Variational Upper Bound**. They approximate the squared penalty term using auxiliary variables $d_{j,v}$:
 
 $$
-\left(\sum_{v \in \mathcal{V}} w_v \|B_{\mathcal{G}_v}\|_2\right)^2 \le \sum_{v \in \mathcal{V}} \frac{w_v^2 \|B_{\mathcal{G}_v}\|_2^2}{\gamma_v}
+\left(\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|\beta_{\mathcal{G}_v}^j\|_2\right)^2 \le \sum_{j=1}^p \sum_{v \in \mathcal{V}} \frac{w_v^2 \|\beta_{\mathcal{G}_v}^j\|_2^2}{d_{j,v}}
 $$
 
-This transforms the original non-smooth problem into a smooth **Ridge Regression (Re-weighted Least Squares)** problem, which is solved iteratively.
+subject to $\sum_{j,v} d_{j,v} = 1$ and $d_{j,v} \ge 0$. This formulation transforms the original non-smooth problem into a smooth **Ridge Regression (Re-weighted Least Squares)** problem, which is solved iteratively.
 
-* **Limitation 1: No True Sparsity (Approximate Zeros)**
-    To ensure numerical stability (avoiding division by zero when $\|B\| \to 0$), a smoothing parameter $\epsilon$ must be introduced. Consequently, coefficients approach zero asymptotically but **never reach exactly zero**. This requires arbitrary post-hoc thresholding to select variables.
-* **Limitation 2: High Complexity**
-    The variational update typically requires inverting large matrices in every iteration. The computational complexity is: $$O(q^2n + q^2\log q + np^2 + l(p^3 + qp^2 + pq))$$ In high-dimensional genomic settings (e.g., TWAS/eQTL), the number of features $p$ (SNPs) is the dominant factor, often exceeding $10^5$. The **$O(p^3)$** term makes this approach computationally infeasible for genome-wide data.
+* **Limitation 1: No Exact Sparsity**
+    The variational reformulation leads to a weighted $L_2$ (ridge-type) subproblem, which typically produces dense coefficients. Achieving exact zeros usually requires ad-hoc post-hoc thresholding or an exact non-smooth solver, as the smooth approximation asymptotically approaches zero but rarely reaches it.
+
+* **Limitation 2: High Per-Iteration Cost**
+    Each iteration requires solving large linear systems involving $X^\top X + \lambda D$ (e.g., via Cholesky factorization). This operation can be prohibitively expensive in high-dimensional genomic settings where the number of features $p$ is very large (e.g., $p > 10^5$).
 
 ---
 
 ### 2. Our Approach: BCD + Tree Proximal Operator
 
-`tggl` solves the **original non-smooth** convex optimization problem directly, without approximation.
+`tggl` solves the **original non-smooth** convex optimization problem directly, ensuring theoretical exactness and high efficiency.
 
 #### A. Block Coordinate Descent (BCD)
-We optimize the coefficient matrix $B$ row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm.
+We optimize the coefficient matrix $B$ using Block Coordinate Descent. The algorithm updates the coefficients row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm.
 
 #### B. The Tree-Structured Proximal Operator
-This is the core engine of `tggl`. We utilize the efficient **Dual-Path Algorithm** (Jenatton et al., 2011) to compute the exact proximal map.
+This is the core engine of `tggl`. [cite_start]We utilize an efficient **Dual-Path Algorithm** (Jenatton et al., 2011) to compute the exact proximal map[cite: 1].
 
-* **Mechanism**: The algorithm exploits the hierarchical nesting of groups. It computes the projection by traversing the tree in a specific topological order (typically from leaves to roots).
+* **Mechanism**: The algorithm exploits the hierarchical structure of the groups. It computes the exact projection by traversing the tree in a topological order (typically **post-order**, from leaves to the root).
 * **Sequential Shrinkage**: At each node $v$, a generalized soft-thresholding operation is applied to the associated vector of coefficients. The threshold is determined by the node's weight $w_v$ and the regularization parameter $\lambda$.
-* **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the norm of a group falls below the threshold at any stage of the traversal, the entire group is zeroed out, strictly enforcing the hierarchical sparsity constraint.
+* **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the group norm falls below the threshold $\lambda w_v$ at any stage of the traversal, the entire group of coefficients is zeroed out, strictly enforcing the hierarchical sparsity constraint.
 
 #### Complexity Analysis
-Our approach avoids matrix inversion entirely. The computational complexity is $$O(l(npq + pq^2))$$, where $l$ is the number of iterations. In high-dimensional settings where **$p \gg n, q$**, the complexity is effectively **linear in $p$** ($O(p)$). This drastic reduction from cubic $O(p^3)$ to linear $O(p)$ allows `tggl` to scale efficiently to hundreds of thousands of variants.
+Per epoch, the BCD algorithm with residual updates costs $O(\text{nnz}(X) \cdot q)$ (or $O(npq)$ for dense $X$), plus $O(p_{\text{active}} \cdot |\mathcal{V}|)$ for the tree proximal operator. In high-dimensional regimes where $p \gg n, q$, and treating $n, q$ as constants, the runtime grows **approximately linearly** with the number of active features $p_{\text{active}}$. This represents a drastic improvement over the cubic complexity of solver-based variational methods.
 
 ---
 
