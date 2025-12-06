@@ -9,15 +9,6 @@
 
 `tggl` is an R package designed for high-dimensional multi-task regression problems where the features (e.g., SNPs) and tasks (e.g., tissues/cell types) follow a hierarchical tree structure. It enforces structural sparsity, allowing for the selection of variables that are shared across groups of tasks or specific to individual tasks.
 
-## Key Features
-
-  * **High Performance**: Implemented in C++ via `Rcpp` and `RcppArmadillo`.
-  * **Scalable Algorithm**: Uses **Block Coordinate Descent (BCD)** with **Active Set** strategies and **Strong Rules**, achieving approximately linear scaling in the number of active features in the high-dimensional regime.
-  * **Flexible Tree Structure**: Supports tree-structured (nested) hierarchical structures (Root $\to$ Intermediate Groups $\to$ Leaves).
-  * **Smart Tuning**: Implements a **"Coarse-to-Fine"** grid search strategy for Cross-Validation (CV) to find the optimal penalty parameter fast and accurately.
-  * **Visualization**: Built-in support for visualizing coefficient patterns (heatmaps).
-
-
 ## Problem Formulation
 
 Consider a multi-task regression problem with $n$ samples, $p$ features (predictors), and $q$ tasks (responses). Let $Y \in \mathbb{R}^{n \times q}$ be the response matrix, $X \in \mathbb{R}^{n \times p}$ be the design matrix, and $B \in \mathbb{R}^{p \times q}$ be the matrix of regression coefficients.
@@ -208,7 +199,7 @@ This is the core engine of `tggl`. We utilize an efficient proximal algorithm fo
 * **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the group norm falls below the threshold $\lambda w_v$ at any stage of the traversal, the entire group of coefficients is zeroed out, strictly enforcing the hierarchical sparsity constraint.
 
 #### Complexity Analysis
-Per epoch, the BCD algorithm with residual updates costs $O(\text{nnz}(X) \cdot q)$ (or $O(npq)$ for dense $X$), plus $O(p_{\text{active}} \cdot |\mathcal{V}|)$ for the tree proximal operator. In high-dimensional regimes where $p \gg n, q$, and treating $n, q$ as constants, the runtime grows **approximately linearly** with the number of active features $p_{\text{active}}$. This represents a drastic improvement over the cubic complexity of solver-based variational methods.
+Per epoch, the BCD algorithm with residual updates costs $O(\text{nnz}(X) \cdot q)$ (or $O(npq)$ for dense $X$), plus $O(p_{\text{active}} \cdot |\mathcal{V}|)$ for the tree proximal operator. In high-dimensional regimes where $p \gg n, q$, and treating $n, q$ as constants, the runtime grows **approximately linearly** with the number of active features $p_{\text{active}}$. This represents a good improvement over the cubic complexity of solver-based variational methods.
 
 ---
 
