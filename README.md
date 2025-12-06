@@ -179,14 +179,14 @@ This formulation transforms the original non-smooth problem into a smooth ridge-
     The variational reformulation leads to a weighted $L_2$ (ridge-type) subproblem, which typically produces dense coefficients. Exact zeros usually require explicit post-hoc thresholding or an exact non-smooth solver, as the smooth approximation asymptotically approaches zero but rarely reaches it.
 
 * **Limitation 2: High Per-Iteration Cost**
-    In the alternating updates, the coefficient update step for the $k$-th task involves $B_{\cdot k} = (X^\top X + \lambda D)^{-1}X^\top Y_{\cdot k}$. Each iteration requires solving a $p \times p$ linear system; a dense factorization has **$O(p^3)$** time (naively) and becomes prohibitive when $p$ is large (e.g., $p > 10^5$).
+    In the alternating updates, the coefficient update step for the $k$-th task involves $B_{\cdot k} = (X^\top X + \lambda D)^{-1}X^\top Y_{\cdot k}$, where $D$ is a diagonal matrix constructed from the auxiliary variables $d_{j,v}$. Each iteration requires solving a $p \times p$ linear system; a dense factorization has **$O(p^3)$** time (naively) and becomes prohibitive when $p$ is large (e.g., $p > 10^5$).
    
 
 ---
 
 ### 2. Our Approach: BCD + Tree Proximal Operator
 
-`tggl` solves the **original non-smooth** convex optimization problem directly, ensuring theoretical exactness and high efficiency.
+`tggl` solves the **original non-smooth** convex optimization problem directly.
 
 #### A. Block Coordinate Descent (BCD)
 We optimize the coefficient matrix $B$ using Block Coordinate Descent. The algorithm updates the coefficients row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm.
@@ -203,8 +203,7 @@ Per epoch, the BCD algorithm with residual updates costs $O(\text{nnz}(X) \cdot 
 
 ---
 
-
-**Conclusion**: By combining Block Coordinate Descent with an active set strategy and the analytical tree proximal operator, `tggl` achieves high computational efficiency while guaranteeing the theoretical properties of the Tree-Guided Group Lasso.
+**Conclusion**: By combining Block Coordinate Descent with an active set strategy and the tree-guided proximal operator, `tggl` achieves high computational efficiency while guaranteeing the theoretical properties of the Tree-Guided Group Lasso.
 
 ## License
 
