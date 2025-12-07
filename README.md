@@ -159,7 +159,7 @@ The package automatically handles the hierarchical order (leaves to root) intern
 
 `tggl` implements a direct optimization strategy that differs significantly from the variational approximations often used in early literature. Below, we compare the two approaches to highlight the advantages of our implementation.
 
-### 1. The Variational Approach
+### 1. The Traditional Variational Approach
 
 The variational framework addresses the non-smooth nature of the tree-guided penalty by using a **Variational Upper Bound**. The squared penalty term is approximated using auxiliary variables $d_{j,v}$:
 
