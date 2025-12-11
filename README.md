@@ -36,7 +36,7 @@ Where:
 
 ### Hierarchical Sparsity
 
-This overlapping group structure imposes **hierarchical sparsity**. If the coefficient group for a parent node is shrunk to zero, the coefficients for all its descendant nodes are automatically forced to zero. This allows the model to select features that are effective at different granularities—for example, selecting a variant that affects all tasks (global signal) versus one that affects only a specific subgroup of tasks (local signal).
+This overlapping group structure imposes **hierarchical sparsity**. If the coefficient group for a parent node is shrunk to zero, the coefficients for all its descendant nodes are automatically forced to zero. This allows the model to select features that are effective at different granularities. For example, selecting a variant that affects all tasks (global signal) versus one that affects only a specific subgroup of tasks (local signal).
 
 
 ## Installation
@@ -161,7 +161,7 @@ The package automatically handles the hierarchical order (leaves to root) intern
 
 ### 1. The Traditional Variational Approach
 
-The variational framework addresses the non-smooth nature of the tree-guided penalty by using a **Variational Upper Bound**. The squared penalty term is approximated using auxiliary variables $d_{j,v}$:
+The variational framework addresses the non-smooth nature of the tree-guided penalty by using a Variational Upper Bound. The squared penalty term is approximated using auxiliary variables $d_{j,v}$:
 
 $$
 \left(\sum_{j=1}^p \sum_{v \in \mathcal{V}} w_v \|B_{j, \mathcal{G}_v}\|_2\right)^2 \le \sum_{j=1}^p \sum_{v \in \mathcal{V}} \frac{w_v^2 \|B_{j, \mathcal{G}_v}\|_2^2}{d_{j,v}}
