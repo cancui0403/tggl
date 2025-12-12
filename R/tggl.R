@@ -20,12 +20,11 @@ tggl <- function(X, Y, tree,
                  verbose = FALSE,
                  max_iter = 100,
                  tol = 1e-5) {
-  
+
   if (!is.matrix(X)) X <- as.matrix(X)
   if (!is.matrix(Y)) Y <- as.matrix(Y)
   n <- nrow(X); p <- ncol(X)
-  
-  # 标准化逻辑
+
   xm <- rep(0, p); xs <- rep(1, p); ym <- rep(0, ncol(Y))
   if (standardize) {
     xm <- colMeans(X)
@@ -36,28 +35,25 @@ tggl <- function(X, Y, tree,
     ym <- colMeans(Y)
     Y <- sweep(Y, 2, ym, "-")
   }
-  
-  # 准备树参数
+
   indices_list <- lapply(tree, function(x) x$index)
   weight_vec   <- vapply(tree, function(x) x$weight, numeric(1))
   node_order   <- get_postorder_indices(tree)
-  
-  # 生成 Lambda
+
   if (is.null(lambdas)) {
     Rchol <- .tggl_chol_omega(omega)
     lam_max <- .tggl_lambda_max_from(X, Y, tree, Rchol)
     lam_min <- lam_max * lambda.min.ratio
     lambdas <- exp(seq(log(lam_max), log(lam_min), length.out = nlambda))
   }
-  
-  # 调用 C++
+
   fit <- bcd_tggl_fit_cpp(
     X = X, Y = Y, lambdas = lambdas,
     indices_list = indices_list, weight_vec = weight_vec,
     node_order = node_order, max_iter = max_iter, tol = tol,
     verbose = verbose, omega = omega
   )
-  
+
   structure(list(
     beta = fit$beta,
     lambda = fit$lambda,
