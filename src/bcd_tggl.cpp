@@ -17,11 +17,11 @@ static inline void build_groups_0based(
 }
 
 static inline void prox_tree_l2_laminar_inplace(
-    arma::rowvec& z,                                 // Length q
-    const std::vector<arma::uvec>& groups,           // 0-based indices
-    const Rcpp::IntegerVector& node_order,           // 1-based post-order: leaf->parent->root
-    const arma::vec& tau_base,                       // tau_base[v] = lambda * w_v
-    const double scale                               // *** = outer step size (acts on B in this version)
+    arma::rowvec& z,
+    const std::vector<arma::uvec>& groups,
+    const Rcpp::IntegerVector& node_order,
+    const arma::vec& tau_base,
+    const double scale
 ){
   const int K = node_order.size();
   for (int kk = 0; kk < K; ++kk) {
@@ -48,7 +48,7 @@ static inline void prox_tree_l2_laminar_inplace(
 static inline arma::vec screening_stat_max_over_nodes(
     const arma::mat& G,                       // p x q
     const std::vector<arma::uvec>& groups,
-    const arma::vec& w,                       // Node weights
+    const arma::vec& w,
     const double tol_w = 1e-15
 ){
   const int p = G.n_rows;
@@ -95,19 +95,19 @@ static inline double spectral_norm_upper(const arma::mat& Om, int iters = 20)
 static inline void bcd_single_lambda_B(
     const arma::mat& X,                    // n x p
     const arma::mat& Y,                    // n x q
-    const double lambda,                   // Current lambda
+    const double lambda,
     const std::vector<arma::uvec>& groups,
     const Rcpp::IntegerVector& node_order,
-    const arma::vec& w,                    // Node weights
+    const arma::vec& w,
     const arma::vec& s_j,                  // ||x_j||^2
-    const arma::vec& inv_s_j,              // 1/||x_j||^2
-    const arma::mat* Omega_ptr,            // *** Can be nullptr
-    arma::mat& B,                          // [in/out] p x q variable (directly on B)
-    arma::mat& Rmat,                       // [in/out] Residual R = X*B - Y
+    const arma::vec& inv_s_j,
+    const arma::mat* Omega_ptr,
+    arma::mat& B,
+    arma::mat& Rmat,
     std::vector<uint8_t>& active,          // [in/out] Active set flags (p)
     std::vector<int>& active_idx,          // [in/out] Active set indices
-    const arma::vec* sstat_prev,           // S_j from previous lambda (can be null, for SSR)
-    const double lambda_prev,              // Previous lambda (<=0 means none)
+    const arma::vec* sstat_prev,
+    const double lambda_prev,
     const int max_epoch,
     const double tol,
     const bool verbose
@@ -159,9 +159,9 @@ static inline void bcd_single_lambda_B(
       int j = active_idx[a];
 
       arma::rowvec bj = B.row(j);
-      arma::rowvec g  = X.col(j).t() * Rtil;           // *** g_j = X_j^T (R Omega)
-      double alpha_j  = inv_s_j[j] / L_Omega;          // *** Row step size
-      arma::rowvec v  = bj - alpha_j * g;              // Unpenalized step (on B)
+      arma::rowvec g  = X.col(j).t() * Rtil;
+      double alpha_j  = inv_s_j[j] / L_Omega;
+      arma::rowvec v  = bj - alpha_j * g;
 
       // *** Prox acts directly on b_j, using step size as scale
       prox_tree_l2_laminar_inplace(v, groups, node_order, tau_base, /*scale=*/alpha_j);
@@ -187,7 +187,7 @@ static inline void bcd_single_lambda_B(
     if (verbose) Rcpp::Rcout << " epoch " << (it+1) << " rel=" << rel << std::endl;
 
     // ===== KKT Check: Find violators not in active set and add them =====
-    arma::mat G = X.t() * Rtil;                        // *** G = X^T (R Omega)
+    arma::mat G = X.t() * Rtil;
     arma::vec S = screening_stat_max_over_nodes(G, groups, w);
 
     bool added = false;
@@ -197,7 +197,7 @@ static inline void bcd_single_lambda_B(
         added = true;
       }
     }
-    if (!added && rel < tol) break; // No new violators and converged
+    if (!added && rel < tol) break;
   }
 }
 
