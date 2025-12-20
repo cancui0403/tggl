@@ -2,9 +2,6 @@
 #include <RcppArmadillo.h>
 using namespace Rcpp;
 
-/* =======================================================
- * Helper: Group indices (1-based -> 0-based)
- * ======================================================= */
 static inline void build_groups_0based(
     const Rcpp::List& indices_list,
     std::vector<arma::uvec>& groups
@@ -19,16 +16,12 @@ static inline void build_groups_0based(
   }
 }
 
-/* =======================================================
- * Helper: Tree (laminar) group proximal operator: one pass, in-place scaling
- * Note: scale = outer step size (eta for FISTA, or alpha_j for row-wise PG)
- * ======================================================= */
 static inline void prox_tree_l2_laminar_inplace(
     arma::rowvec& z,                                 // Length q
     const std::vector<arma::uvec>& groups,           // 0-based indices
     const Rcpp::IntegerVector& node_order,           // 1-based post-order: leaf->parent->root
     const arma::vec& tau_base,                       // tau_base[v] = lambda * w_v
-    const double scale                                // *** = outer step size (acts on B in this version)
+    const double scale                               // *** = outer step size (acts on B in this version)
 ){
   const int K = node_order.size();
   for (int kk = 0; kk < K; ++kk) {
@@ -52,11 +45,6 @@ static inline void prox_tree_l2_laminar_inplace(
   }
 }
 
-/* =======================================================
- * Helper: Calculate Strong/KKT screening statistics
- * S_j = max_v ||(G)_{Gv}||_2 / w_v
- * Here G = X^T (R Omega) (In this version: R = XB - Y)
- * ======================================================= */
 static inline arma::vec screening_stat_max_over_nodes(
     const arma::mat& G,                       // p x q
     const std::vector<arma::uvec>& groups,
@@ -88,11 +76,7 @@ static inline arma::vec screening_stat_max_over_nodes(
   return smax;
 }
 
-/* =======================================================
- * Helper: Upper bound of spectral norm of Omega (Power Method)
- * Used to set row step size alpha_j = (1/||X_j||^2) / L_Omega
- * If Omega is not provided, L_Omega = 1
- * ======================================================= */
+
 static inline double spectral_norm_upper(const arma::mat& Om, int iters = 20)
 {
   if (Om.n_rows == 0) return 1.0;
@@ -108,16 +92,6 @@ static inline double spectral_norm_upper(const arma::mat& Om, int iters = 20)
   return std::max(val, 1e-12);
 }
 
-/* =======================================================
- * Core: "Row-wise Proximal Gradient" BCD for a single lambda (Penalty directly on B)
- * Objective: min_B  1/2 ||(Y - X B) Omega^{1/2}||_F^2 + lambda sum_v w_v ||B_{.,G_v}||_2
- * Key changes:
- * - Variable: B (No longer using C=B S)
- * - Residual: R = X B - Y
- * - Gradient slice: g_j = X_j^T (R Omega)
- * - Step size: alpha_j = (1/||X_j||^2) / L_Omega, where L_Omega approx ||Omega||_2
- * - Prox: Tree-structured group soft-thresholding on b_j with tau = alpha_j lambda w_v
- * ======================================================= */
 static inline void bcd_single_lambda_B(
     const arma::mat& X,                    // n x p
     const arma::mat& Y,                    // n x q
