@@ -36,7 +36,7 @@ Where:
 
 ### Hierarchical Sparsity
 
-This overlapping group structure imposes **hierarchical sparsity**. If the coefficient group for a parent node is shrunk to zero, the coefficients for all its descendant nodes are automatically forced to zero. This allows the model to select features that are effective at different granularities. For example, selecting a variant that affects all tasks (global signal) versus one that affects only a specific subgroup of tasks (local signal).
+This overlapping group structure imposes hierarchical sparsity. If the coefficient group for a parent node is shrunk to zero, the coefficients for all its descendant nodes are automatically forced to zero. This allows the model to select features that are effective at different granularities. For example, selecting a variant that affects all tasks (global signal) versus one that affects only a specific subgroup of tasks (local signal).
 
 
 ## Installation
@@ -189,12 +189,15 @@ This formulation transforms the original non-smooth problem into a smooth ridge-
 `tggl` solves the **original non-smooth** convex optimization problem directly.
 
 #### A. Block Coordinate Descent (BCD)
-We optimize the coefficient matrix $B$ using Block Coordinate Descent. The algorithm updates the coefficients row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm.
+We optimize the coefficient matrix $B$ using Block Coordinate Descent. The algorithm updates the coefficients row-by-row (feature-by-feature). For a fixed feature $j$, the optimization sub-problem reduces to computing the **Proximal Operator** for the tree-structured norm. 
+
+In some problems like stage 1 for transcriptome-wide association studies, the features (SNPs) are highly correlated according to the LD structure. We can update the coefficients block-by-block in this case.
 
 #### B. The Tree-Structured Proximal Operator
-This is the core engine of `tggl`. We utilize an efficient proximal algorithm for hierarchical/overlapping groups (Jenatton et al., 2011) to compute the exact proximal map.
+This is the core engine of `tggl`. We utilize an efficient proximal algorithm for hierarchical/overlapping groups (Jenatton et al., 2011) to compute the exact proximal operator.
 
 * **Mechanism**: The algorithm exploits the hierarchical structure of the groups. It computes the exact proximal operator by traversing the tree in a topological order (typically **post-order**, from leaves to the root).
+
 * **Sequential Shrinkage**: At each node $v$, a generalized soft-thresholding operation is applied to the associated vector of coefficients. The threshold is determined by the node's weight $w_v$ and the regularization parameter $\lambda$.
 * **Exact Sparsity**: A crucial advantage of this operator is its ability to set coefficients to **exactly zero**. If the group norm falls below the threshold $\lambda w_v$ at any stage of the traversal, the entire group of coefficients is zeroed out, strictly enforcing the hierarchical sparsity constraint.
 
